@@ -102,7 +102,7 @@ def get_command_line_args():
     # PR - when testing, limit checks to a single PR
     #--------------------------------------------------------------------------
     parser.add_argument('-p', '--pull-request', dest='pull_request', type=int,
-                        default=0, help='A single PR number for limited testing')
+                        default=-1, help='A single PR number for limited testing')
 
     #--------------------------------------------------------------------------
     # only enable scraping to test github status setting
@@ -152,7 +152,7 @@ def debug_print(*text):
 #--------------------------------------------------------------------------
 def launch_build(nickname, compiler_type, branch_id, branch_name) :
     remote_ssh  = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_MACHINE')
-    remote_path = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_ROOT')
+    remote_path = args.pycicle_dir
     remote_http = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_HTTP')
     job_type    = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_JOB_LAUNCH')
     pyc_p.debug_print('launching build', compiler_type, branch_id, branch_name, job_type)
@@ -234,18 +234,12 @@ def launch_build(nickname, compiler_type, branch_id, branch_name) :
 #--------------------------------------------------------------------------
 def choose_and_launch(project, machine, branch_id, branch_name, compiler_type) :
     pyc_p.debug_print("Begin : choose_and_launch", project, machine, branch_id, branch_name)
-    if project=='hpx' and machine=='daint':
-        if bool(random.getrandbits(1)):
-            compiler_type = 'gcc'
-        else:
-            compiler_type = 'clang'
-    launch_build(machine, compiler_type, branch_id, branch_name)
+    launch_build(machine, '', branch_id, branch_name)
 
 #--------------------------------------------------------------------------
 # Utility function to remove a file from a remote filesystem
 #--------------------------------------------------------------------------
 def erase_file(remote_ssh, file):
-    # erase the pycicle scrape file if we have set status corectly
     try:
         if 'local' not in remote_ssh:
             cmd = ['ssh', remote_ssh ]
@@ -257,13 +251,25 @@ def erase_file(remote_ssh, file):
     except Exception as ex:
         print('File deletion failed', ex)
 
+def erase_directory(remote_ssh, dir):
+    try:
+        if 'local' not in remote_ssh:
+            cmd = ['ssh', remote_ssh ]
+        else:
+            cmd = []
+        cmd = cmd + [ 'rm', '-rf', dir]
+        result = subprocess.check_output(cmd).split()
+        print('Directory removed', dir)
+    except Exception as ex:
+        print('Directory deletion failed', ex)
+
 #--------------------------------------------------------------------------
 # find all the PR build jobs submitted and from them the build dirs
 # that we can use to scrape results from
 #--------------------------------------------------------------------------
 def find_scrape_files(project, nickname) :
     remote_ssh  = pyc_p.get_setting_for_machine(project, nickname, 'PYCICLE_MACHINE')
-    remote_path = pyc_p.get_setting_for_machine(project, nickname, 'PYCICLE_ROOT')
+    remote_path = args.pycicle_dir
 
     JobFiles   = []
     PR_numbers = {}
@@ -288,7 +294,7 @@ def find_scrape_files(project, nickname) :
             JobFiles.append(tagfile)
             pyc_p.debug_print('#'*5, tagfile)
             # for each build dir, return the PR number and results file
-            m = re.search(search_path + project + '-([0-9]+).*/pycicle-TAG.txt', tagfile)
+            m = re.search(re.escape(search_path + project) + '-([0-9]+).*/pycicle-TAG.txt', tagfile)
             if m:
                 PR_numbers[m.group(1)] = tagfile
                 pyc_p.debug_print('#'*5, 'Regex search pycicle-TAG gives PR:', m.group(1))
@@ -315,9 +321,9 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
     Test_Errors   = 0
     Errors        = []
 
-    context = re.search(r'/build/'+project+'-.+?-(.+)/pycicle-TAG.txt', scrape_file)
+    context = re.search(r'/build/'+re.escape(project)+'-.+?-(.+)/pycicle-TAG.txt', scrape_file)
     if context:
-        origin = nickname + '-' + context.group(1)
+        origin = 'daint-' + context.group(1)
     else:
         origin = 'unknown'
 
@@ -362,6 +368,8 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
                 print('Done setting github PR status for', origin)
 
         erase_file(remote_ssh, scrape_file)
+        build_dir = re.search(r'(.*)/pycicle-TAG.txt', scrape_file).group(1)
+        erase_directory(remote_ssh, build_dir)
         print('-' * 30)
 
     except Exception as ex:
@@ -415,7 +423,7 @@ def needs_update(project_name, branch_id, branch_name, branch_sha, base_sha):
 #--------------------------------------------------------------------------
 def delete_old_files(nickname, path, days) :
     remote_ssh  = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_MACHINE')
-    remote_path = pyc_p.get_setting_for_machine(args.project, nickname, 'PYCICLE_ROOT')
+    remote_path = args.pycicle_dir
     directory   = remote_path + '/' + path
     Dirs        = []
 
@@ -497,11 +505,10 @@ if __name__ == "__main__":
     print('PYCICLE_CDASH_HTTP_PATH      =', cdash_http_path)
     print('-' * 30)
 
-    # @todo make these into options
-    # 60 seconds between polls.
-    poll_time   = 60
-    # 10 mins between checks for results and cleanups.
-    scrape_time = 10*60
+    # time between polls.
+    poll_time   = 30*60
+    # time between checks for results and cleanups
+    scrape_time = 5*60
 
     try:
         print("connecting to git hub with:")
@@ -559,14 +566,16 @@ if __name__ == "__main__":
             pyc_p.debug_print(base_branch)
             #
             # just get a single PR if that was all that was asked for
-            if args.pull_request!=0:
+            pull_requests = []
+            if args.pull_request>0:
                 pr = repo.get_pull(args.pull_request)
                 pyc_p.debug_print(pr)
                 pull_requests = [pr]
                 pyc_p.debug_print('Requested PR: ', pr)
-            # otherwise get all open PRs
-            else:
+            # -1 is all pull requests
+            elif args.pull_request<0:
                 pull_requests = repo.get_pulls('open', base=base_branch.name)
+            # 0 is master, handled later
 
             pr_list = {}
             #
@@ -594,7 +603,8 @@ if __name__ == "__main__":
                 # need details, including last commit on PR for setting status
                 pr_list[branch_id] = [machine, branch_name, pr.get_commits().reversed[0]]
                 #
-                if args.pull_request!=0 and pr.number!=args.pull_request:
+                # pull_request > 0 means specific pr (0 is master, -1 is all)
+                if args.pull_request>0 and pr.number!=args.pull_request:
                     continue
                 if not pr.mergeable:
                     continue
@@ -604,8 +614,8 @@ if __name__ == "__main__":
                     if update:
                         choose_and_launch(args.project, machine, branch_id, branch_name, compiler_type)
 
-            # also build the base branch if it has changed
-            if not args.scrape_only and args.pull_request==0:
+            # also build the base branch if it has changed, -1 = all (includes master), 0 = master only
+            if not args.scrape_only and args.pull_request<=0:
                 if force or needs_update(args.project, github_base, github_base, base_sha, base_sha):
                     choose_and_launch(args.project, machine, github_base, github_base, compiler_type)
                     pr_list[github_base] = [machine, github_base, base_branch.commit, ""]
@@ -631,8 +641,8 @@ if __name__ == "__main__":
                             builds_done.get(branch_id))
 
                 # cleanup old files that need to be purged every N days
-                delete_old_files(machine, 'src',   1)
-                delete_old_files(machine, 'build', 1)
+                delete_old_files(machine, 'src',   3)
+                delete_old_files(machine, 'build', 3)
 
         except (github.GithubException, socket.timeout, ssl.SSLError) as ex:
             # github might be down, or there may be a network issue,
