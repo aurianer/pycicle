@@ -17,7 +17,7 @@ cat >run.sh <<EOL
 
 PYCICLE_GITHUB_TOKEN="<insert token here>" \
 PYCICLE_ROOT=${pycicle_root}/${instance_dir} \
-python2 pycicle/pycicle.py \
+python3 pycicle/pycicle.py \
     --machine "daint-${instance_name}" \
     --project hpx \
     --build-type ${build_type} \
