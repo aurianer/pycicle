@@ -30,6 +30,8 @@ message("getting project settings ${CMAKE_CURRENT_LIST_DIR}/config/${PYCICLE_PRO
 include(${CMAKE_CURRENT_LIST_DIR}/config/${PYCICLE_PROJECT_NAME}/${PYCICLE_PROJECT_NAME}.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/config/${PYCICLE_PROJECT_NAME}/${PYCICLE_HOST}.cmake)
 
+set(CTEST_TEST_TIMEOUT 200)
+
 #######################################################################
 # a function that calls ctest_submit - only used to make
 # debugging a bit simpler by allowing us to disable submits
@@ -262,6 +264,8 @@ ctest_build(TARGET ${PYCICLE_CTEST_BUILD_TARGET} )
 pycicle_submit(PARTS Build)
 
 message("Test...")
+set(CTEST_TEST_TIMEOUT 200)
+set(DART_TESTING_TIMEOUT 200)
 ctest_test(RETURN_VALUE test_result_ EXCLUDE "compile")
 pycicle_submit(PARTS Test)
 
