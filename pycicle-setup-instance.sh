@@ -9,7 +9,7 @@ pull_request=$3
 instance_dir=instance-$instance_name
 pushd $pycicle_root
 
-mkdir $instance_dir
+mkdir -p $instance_dir
 pushd $instance_dir
 
 cat >run.sh <<EOL
@@ -31,12 +31,12 @@ ln -s $APPS/UES/simbergm/src/pycicle/
 
 mkdir src
 
-mkdir repos
+mkdir -p repos
 pushd repos
 git clone https://github.com/STEllAR-GROUP/hpx.git
 popd
 
-mkdir build
+mkdir -p build
 touch build/emptyfile
 
 popd
