@@ -367,8 +367,8 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
                     context='pycicle ' + origin + ' Test')
                 print('Done setting github PR status for', origin)
 
-        erase_file(remote_ssh, scrape_file)
         build_dir = re.search(r'(.*)/pycicle-TAG.txt', scrape_file).group(1)
+        erase_file(remote_ssh, scrape_file)
         erase_directory(remote_ssh, build_dir)
         print('-' * 30)
 
@@ -640,9 +640,9 @@ if __name__ == "__main__":
                             pyc_p.get_setting_for_machine(args.project, machine, 'PYCICLE_MACHINE'),
                             builds_done.get(branch_id))
 
-                # cleanup old files that need to be purged every N days
-                delete_old_files(machine, 'src',   3)
-                delete_old_files(machine, 'build', 3)
+                # Delete files more than a day old
+                delete_old_files(machine, 'src',   0)
+                delete_old_files(machine, 'build', 0)
 
         except (github.GithubException, socket.timeout, ssl.SSLError) as ex:
             # github might be down, or there may be a network issue,
