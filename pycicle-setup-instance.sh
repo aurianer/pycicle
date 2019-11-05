@@ -15,6 +15,10 @@ pushd $instance_dir
 cat >run.sh <<EOL
 #!/usr/bin/env bash
 
+# Activate the python virtual environment so that it find the github package
+activate pycicle
+# Rk: activate is a local bash function
+
 PYCICLE_GITHUB_TOKEN="<insert token here>" \
 PYCICLE_ROOT=${pycicle_root}/${instance_dir} \
 python3 pycicle/pycicle.py \
