@@ -198,24 +198,24 @@ set(CTEST_MODEL Experimental)
 #######################################################################
 # INSPECT : START a fake dashboard using only configure to run inspect
 #######################################################################
-if (PYCICLE_PROJECT_NAME MATCHES "hpx")
-  message("Initialize dashboard : ${CTEST_MODEL} ...")
-  set(CTEST_BINARY_DIRECTORY "${PYCICLE_BINARY_DIRECTORY}/inspect")
-  ctest_start(${CTEST_MODEL}
-    TRACK "Inspect"
-    "${CTEST_SOURCE_DIRECTORY}"
-    "${CTEST_BINARY_DIRECTORY}"
-  )
-
-  # configure step calls inspect instead of cmake
-  string(CONCAT CTEST_CONFIGURE_COMMAND
-    "${PYCICLE_ROOT}/inspect/inspect ${CTEST_SOURCE_DIRECTORY}/hpx --all --text"
-  )
-
-  message("Running inspect...")
-  ctest_configure()
-  ctest_submit(PARTS Configure)
-endif()
+#if (PYCICLE_PROJECT_NAME MATCHES "hpx")
+#  message("Initialize dashboard : ${CTEST_MODEL} ...")
+#  set(CTEST_BINARY_DIRECTORY "${PYCICLE_BINARY_DIRECTORY}/inspect")
+#  ctest_start(${CTEST_MODEL}
+#    TRACK "Inspect"
+#    "${CTEST_SOURCE_DIRECTORY}"
+#    "${CTEST_BINARY_DIRECTORY}"
+#  )
+#
+#  # configure step calls inspect instead of cmake
+#  string(CONCAT CTEST_CONFIGURE_COMMAND
+#    "${PYCICLE_ROOT}/inspect/inspect ${CTEST_SOURCE_DIRECTORY}/hpx --all --text"
+#  )
+#
+#  message("Running inspect...")
+#  ctest_configure()
+#  ctest_submit(PARTS Configure)
+#endif()
 
 #######################################################################
 # Reset binary directory path
