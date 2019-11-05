@@ -168,6 +168,6 @@ ${PYCICLE_COMPILER_SETUP}
 # ---------------------
 # This is used by the hpx test runner
 # ---------------------
-export HPXRUN_RUNWRAPPER=srun
+#export HPXRUN_RUNWRAPPER=srun
 "
 )
