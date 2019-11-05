@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+session_name='pycicle'
+
+tmux new-session -s $session_name -n 'queue' -d 'ssh -t daint.cscs.ch "cd /apps/daint/UES/simbergm/src/pycicle/ && ./pycicle-watch.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-oldest                                && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-newest                                && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-cuda                                  && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-oldest                              && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-newest                              && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-apex                                && ./run.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-asan                                && ./run.sh"'
+
+tmux -2 attach-session -d 
