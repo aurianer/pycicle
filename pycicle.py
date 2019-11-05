@@ -341,7 +341,7 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
             DateURL   = DateStamp[0:4]+'-'+DateStamp[4:6]+'-'+DateStamp[6:8]
             print('Extracted date as', DateURL)
 
-            URL = ('http://{}/{}/index.php?project='.format(cdash_server, cdash_http_path) + cdash_project_name +
+            URL = ('https://{}/{}/index.php?project='.format(cdash_server, cdash_http_path) + cdash_project_name +
                    '&date=' + DateURL +
                    '&filtercount=1' +
                    '&field1=buildname/string&compare1=63&value1=' +
