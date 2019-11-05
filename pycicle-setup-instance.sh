@@ -27,7 +27,7 @@ EOL
 
 chmod +x run.sh
 
-ln -s $APPS/UES/simbergm/src/pycicle/
+ln -s $HOME/projects/pycicle/
 
 mkdir src
 
