@@ -7,6 +7,7 @@ instance_name=$1
 build_type=$2
 pull_request=$3
 instance_dir=instance-$instance_name
+mkdir -p $pycicle_root
 pushd $pycicle_root
 
 mkdir $instance_dir
@@ -33,7 +34,7 @@ EOL
 
 chmod +x run.sh
 
-ln -s $APPS/UES/simbergm/src/pycicle/
+ln -s $PYCICLE_SRC pycicle
 
 mkdir src
 

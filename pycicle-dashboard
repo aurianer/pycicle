@@ -1,16 +1,30 @@
-#!/usr/bin/env bash
+#!/bin/bash -i
+# The minus i does have the local configuration and environment variables
+
+if [[ -z $PYCICLE_SRC ]] || [[ -z $SCRATCH ]]; then
+    echo "You must set PYCICLE_SRC and SCRATCH environmental variables for"
+    echo "this script to work"
+    echo "PYCICLE_SRC = $PYCICLE_SRC"
+    echo "SCRATCH = $SCRATCH"
+    exit
+fi
 
 session_name='pycicle'
 
-tmux new-session -s $session_name -n 'queue' -d 'ssh -t daint.cscs.ch "cd /apps/daint/UES/simbergm/src/pycicle/ && ./pycicle-watch.sh"'
+tmux new-session -s $session_name -n 'queue' -d 'ssh -t daint.cscs.ch "cd $PYCICLE_SRC && ./pycicle-watch.sh"'
 
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-oldest                                && ./run.sh"'
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-newest                                && ./run.sh"'
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-gcc-cuda                                  && ./run.sh"'
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-oldest                              && ./run.sh"'
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-newest                              && ./run.sh"'
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-apex                                && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-gcc-oldest && ./run.sh"'
 
-tmux new-window 'ssh -t daint.cscs.ch "cd /scratch/snx3000/simbergm/pycicle/instance-clang-asan                                && ./run.sh"'
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-gcc-newest && ./run.sh"'
 
-tmux -2 attach-session -d 
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-gcc-cuda && ./run.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-clang-oldest && ./run.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-clang-newest && ./run.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-clang-apex && ./run.sh"'
+
+tmux new-window 'ssh -t daint.cscs.ch "cd $SCRATCH/pycicle/instance-clang-asan && ./run.sh"'
+
+tmux -2 attach-session -d
