@@ -129,7 +129,7 @@ def get_command_line_args():
     print('pycicle: scrape-only :', 'enabled' if args.scrape_only else 'disabled')
     print('pycicle: force       :', 'enabled' if args.force else 'disabled')
     print('pycicle: path        :', args.pycicle_dir)
-    print('pycicle: token       :', args.user_token)
+    #print('pycicle: token       :', args.user_token)
     print('pycicle: machines    :', args.machines)
     print('pycicle: PR          :', args.pull_request)
     print('pycicle: build_type  :', args.build_type)
@@ -517,7 +517,7 @@ if __name__ == "__main__":
 
     try:
         print("connecting to git hub with:")
-        print("github.Github({},{})".format(github_organisation, args.user_token))
+        #print("github.Github({},{})".format(github_organisation, args.user_token))
         git  = github.Github(github_organisation, args.user_token)
         print("Github User   :",git.get_user().name)
         print("Github Reponame:",github_reponame)

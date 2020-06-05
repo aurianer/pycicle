@@ -12,10 +12,16 @@ pushd $pycicle_root
 mkdir $instance_dir
 pushd $instance_dir
 
+# To prevent the api token from being discovered
+set +x
+# Don't forget to set the permission on the .github_api_token to 400
+github_token="\$(cat $HOME/.github_api_token)"
+set -x
+
 cat >run.sh <<EOL
 #!/usr/bin/env bash
 
-PYCICLE_GITHUB_TOKEN="<insert token here>" \
+PYCICLE_GITHUB_TOKEN="$github_token" \
 PYCICLE_ROOT=${pycicle_root}/${instance_dir} \
 python2 pycicle/pycicle.py \
     --machine "daint-${instance_name}" \
