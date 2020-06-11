@@ -28,3 +28,4 @@ tmux new-window 'ssh -t pycicle "cd $SCRATCH/pycicle/instance-clang-apex && ./ru
 tmux new-window 'ssh -t pycicle "cd $SCRATCH/pycicle/instance-clang-asan && ./run.sh"'
 
 tmux -2 attach-session -d
+# ctrl-B D: to detach from the current session
