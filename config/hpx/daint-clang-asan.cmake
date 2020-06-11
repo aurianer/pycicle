@@ -4,16 +4,13 @@ set(PYCICLE_JOB_LAUNCH "slurm")
 set(PYCICLE_BUILD_TYPE "Debug")
 
 set(LOCAL_ROOT          "/apps/daint/UES/simbergm/local")
-set(CMAKE_VER           "3.12.0")
 set(CLANG_VER           "8.0")
 set(CXX_STD             "17")
 set(BOOST_VER           "1.69.0")
-set(TCMALLOC_VER        "2.7")
 set(HWLOC_VER           "2.0.3")
 set(CLANG_ROOT          "${LOCAL_ROOT}/llvm-${CLANG_VER}")
 set(BOOST_ROOT          "${LOCAL_ROOT}/boost-${BOOST_VER}-clang-${CLANG_VER}-c++${CXX_STD}-debug")
 set(HWLOC_ROOT          "${LOCAL_ROOT}/hwloc-${HWLOC_VER}-clang-${CLANG_VER}")
-set(TCMALLOC_ROOT       "${LOCAL_ROOT}/gperftools-${TCMALLOC_VER}-clang-${CLANG_VER}")
 set(CFLAGS              "")
 set(CXXFLAGS            "${CFLAGS} -fsanitize=address -fno-omit-frame-pointer -Wno-unused-command-line-argument -stdlib=libc++ -nostdinc++ -I${CLANG_ROOT}/include/c++/v1 -L${CLANG_ROOT}/lib -Wl,-rpath,${CLANG_ROOT}/lib")
 set(LDFLAGS             "")
@@ -36,7 +33,7 @@ string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
     "  -DHPX_WITH_EXAMPLES=ON "
     "  -DHPX_WITH_TESTS=ON "
     "  -DHPX_WITH_TESTS_BENCHMARKS=ON "
-    "  -DHPX_WITH_TESTS_EXTERNAL_BUILD=OFF "
+    "  -DHPX_WITH_TESTS_EXTERNAL_BUILD=ON "
     "  -DHPX_WITH_TESTS_HEADERS=OFF "
     "  -DHPX_WITH_TESTS_REGRESSIONS=ON "
     "  -DHPX_WITH_TESTS_UNIT=ON "
@@ -52,12 +49,12 @@ string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
 )
 
 # Add a random delay
-execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (1 * 60) ))"
+execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (10 * 60) ))"
     OUTPUT_VARIABLE BEGIN_DELAY_MINUTES)
 
 set(PYCICLE_JOB_SCRIPT_TEMPLATE "#!/bin/bash
 #SBATCH --job-name=hpx-${PYCICLE_PR}-${PYCICLE_BUILD_STAMP}
-#SBATCH --time=06:00:00
+#SBATCH --time=03:00:00
 #SBATCH --nodes=1
 #SBATCH --exclusive
 #SBATCH --constraint=mc
@@ -67,7 +64,7 @@ set(PYCICLE_JOB_SCRIPT_TEMPLATE "#!/bin/bash
 export CRAYPE_LINK_TYPE=dynamic
 
 module load   daint-mc
-module load   CMake/${CMAKE_VER}
+module load   CMake
 
 export CFLAGS=\"${CFLAGS}\"
 export CXXFLAGS=\"${CXXFLAGS}\"
@@ -77,6 +74,8 @@ export CC=\"${CLANG_ROOT}/bin/clang\"
 export CXX=\"${CLANG_ROOT}/bin/clang++\"
 export CPP=\"${CLANG_ROOT}/bin/clang -E\"
 export ASAN_SYMBOLIZER_PATH=${CLANG_ROOT}/bin/llvm-symbolizer
+export LSAN_OPTIONS=verbosity=1:log_threads=1
+export ASAN_OPTIONS=verbosity=1:log_threads=1:detect_leaks=0
 
 #export HPXRUN_RUNWRAPPER=srun
 "

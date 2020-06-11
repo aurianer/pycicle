@@ -4,14 +4,13 @@ set(PYCICLE_JOB_LAUNCH "slurm")
 set(PYCICLE_BUILD_TYPE "Release")
 
 set(LOCAL_ROOT          "/apps/daint/UES/simbergm/local")
-set(CMAKE_VER           "3.12.0")
 set(CLANG_VER           "9.0")
 set(CXX_STD             "17")
-set(BOOST_VER           "1.71.0")
+set(BOOST_VER           "1.72.0")
 set(TCMALLOC_VER        "2.7")
 set(HWLOC_VER           "2.1.0")
 set(CLANG_ROOT          "${LOCAL_ROOT}/llvm-${CLANG_VER}")
-set(BOOST_ROOT          "${LOCAL_ROOT}/boost-${BOOST_VER}-clang-${CLANG_VER}-c++${CXX_STD}-release")
+set(BOOST_ROOT          "${LOCAL_ROOT}/boost-${BOOST_VER}-clang-${CLANG_VER}-c++${CXX_STD}-debug")
 set(HWLOC_ROOT          "${LOCAL_ROOT}/hwloc-${HWLOC_VER}-clang-${CLANG_VER}")
 set(TCMALLOC_ROOT       "${LOCAL_ROOT}/gperftools-${TCMALLOC_VER}-clang-${CLANG_VER}")
 set(CFLAGS              "")
@@ -22,7 +21,7 @@ set(LDCXXFLAGS          "${LDFLAGS} -stdlib=libc++ -L${CLANG_ROOT}/lib -Wl,-rpat
 set(PYCICLE_BUILD_STAMP "clang-newest")
 
 set(CTEST_SITE "cray(daint)")
-set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
+set(CTEST_CMAKE_GENERATOR "Ninja")
 set(CTEST_TEST_TIMEOUT "200")
 set(BUILD_PARALLELISM  "32")
 string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
@@ -30,15 +29,13 @@ string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
     "\"-DCMAKE_C_FLAGS=${CFLAGS}\" "
     "\"-DCMAKE_EXE_LINKER_FLAGS=${LDCXXFLAGS}\" "
     "  -DHPX_WITH_CXX${CXX_STD}=ON "
-    "  -DHPX_WITH_NATIVE_TLS=ON "
     "  -DHPX_WITH_MALLOC=system "
-    "  -DTCMALLOC_ROOT=${TCMALLOC_ROOT} "
     "  -DHWLOC_ROOT=${HWLOC_ROOT} "
     "  -DBOOST_ROOT=${BOOST_ROOT} "
     "  -DHPX_WITH_EXAMPLES=ON "
     "  -DHPX_WITH_TESTS=ON "
     "  -DHPX_WITH_TESTS_BENCHMARKS=ON "
-    "  -DHPX_WITH_TESTS_EXTERNAL_BUILD=OFF "
+    "  -DHPX_WITH_TESTS_EXTERNAL_BUILD=ON "
     "  -DHPX_WITH_TESTS_HEADERS=OFF "
     "  -DHPX_WITH_TESTS_REGRESSIONS=ON "
     "  -DHPX_WITH_TESTS_UNIT=ON "
@@ -50,7 +47,6 @@ string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
     "  -DHPX_WITH_SPINLOCK_DEADLOCK_DETECTION=ON "
     "  -DHPX_WITH_MAX_CPU_COUNT=128 "
 )
-    #"  -DHPX_WITH_APEX=ON " # TODO: Some tests time out with APEX on.
 
 # Add a random delay
 execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (10 * 60) ))"
@@ -58,7 +54,7 @@ execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (10 * 60) ))"
 
 set(PYCICLE_JOB_SCRIPT_TEMPLATE "#!/bin/bash
 #SBATCH --job-name=hpx-${PYCICLE_PR}-${PYCICLE_BUILD_STAMP}
-#SBATCH --time=06:00:00
+#SBATCH --time=03:00:00
 #SBATCH --nodes=1
 #SBATCH --exclusive
 #SBATCH --constraint=mc
@@ -68,7 +64,7 @@ set(PYCICLE_JOB_SCRIPT_TEMPLATE "#!/bin/bash
 export CRAYPE_LINK_TYPE=dynamic
 
 module load   daint-mc
-module load   CMake/${CMAKE_VER}
+module load   CMake
 
 export CFLAGS=\"${CFLAGS}\"
 export CXXFLAGS=\"${CXXFLAGS}\"
@@ -77,6 +73,7 @@ export LDCXXFLAGS=\"${LDCXXFLAGS}\"
 export CC=\"${CLANG_ROOT}/bin/clang\"
 export CXX=\"${CLANG_ROOT}/bin/clang++\"
 export CPP=\"${CLANG_ROOT}/bin/clang -E\"
+export PATH=/apps/daint/UES/simbergm/spack/opt/spack/cray-cnl7-haswell/gcc-8.3.0/ninja-1.10.0-dcy5yzzldhss6wycy2ejjwj7o75dfddz/bin/:$PATH
 
 #export HPXRUN_RUNWRAPPER=srun
 "
