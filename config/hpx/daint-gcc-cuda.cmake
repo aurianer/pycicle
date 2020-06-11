@@ -1,4 +1,4 @@
-set(PYCICLE_MACHINE "daint.cscs.ch")
+set(PYCICLE_MACHINE "pycicle")
 set(PYCICLE_HTTP TRUE)
 set(PYCICLE_JOB_LAUNCH "slurm")
 set(PYCICLE_BUILD_TYPE "Debug")

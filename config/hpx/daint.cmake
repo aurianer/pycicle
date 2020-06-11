@@ -7,7 +7,7 @@
 # These settings control how jobs are launched and results collected
 #######################################################################
 # the name used to ssh into the machine
-set(PYCICLE_MACHINE "daint.cscs.ch")
+set(PYCICLE_MACHINE "pycicle")
 # the root location of the build/test tree on the machine
 set(PYCICLE_ROOT "/scratch/snx3000/biddisco/pycicle")
 # a flag that says if the machine can send http results to cdash
