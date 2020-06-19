@@ -511,9 +511,9 @@ if __name__ == "__main__":
     print('-' * 30)
 
     # time between polls.
-    poll_time   = 30*60
+    poll_time   = 20*60
     # time between checks for results and cleanups
-    scrape_time = 5*60
+    scrape_time = 1*60
 
     try:
         print("connecting to git hub with:")
@@ -553,6 +553,7 @@ if __name__ == "__main__":
     scrape_t1       = github_t1 + datetime.timedelta(hours=-1)
     scrape_tdiff    = 0
     force           = args.force
+    first_run       = True
     #
     random.seed(7)
     #
@@ -561,69 +562,72 @@ if __name__ == "__main__":
         try:
             github_t2     = datetime.datetime.now()
             github_tdiff  = github_t2 - github_t1
-            github_t1     = github_t2
-            print('-' * 30)
-            print('Checking github:', 'Time since last check:', github_tdiff.seconds, '(s)')
-            print('-' * 30)
 
-            base_branch = repo.get_branch(github_base) #should be PYCICLE_BASE
-            base_sha    = base_branch.commit.sha
-            pyc_p.debug_print(base_branch)
-            #
-            # just get a single PR if that was all that was asked for
-            pull_requests = []
-            if args.pull_request>0:
-                pr = repo.get_pull(args.pull_request)
-                pyc_p.debug_print(pr)
-                pull_requests = [pr]
-                pyc_p.debug_print('Requested PR: ', pr)
-            # -1 is all pull requests
-            elif args.pull_request<0:
-                pull_requests = repo.get_pulls('open', base=base_branch.name)
-            # 0 is master, handled later
+            if (github_tdiff.seconds > poll_time) or first_run:
+                github_t1 = github_t2
+                first_run = False
+                print('-' * 30)
+                print('Checking github:', 'Time since last check:', github_tdiff.seconds, '(s)')
+                print('-' * 30)
 
-            pr_list = {}
-            #
-            for pr in pull_requests:
-                # find out if the PR is from a local branch or from a clone of the repo
-                try:
-                    pyc_p.debug_print('-' * 30)
+                base_branch = repo.get_branch(github_base) #should be PYCICLE_BASE
+                base_sha    = base_branch.commit.sha
+                pyc_p.debug_print(base_branch)
+                #
+                # just get a single PR if that was all that was asked for
+                pull_requests = []
+                if args.pull_request>0:
+                    pr = repo.get_pull(args.pull_request)
                     pyc_p.debug_print(pr)
-                    pyc_p.debug_print('Repo to merge from   :', pr.head.repo.owner.login)
-                    pyc_p.debug_print('Branch to merge from :', pr.head.ref)
-                    if pr.head.repo.owner.login==github_organisation:
-                        pyc_p.debug_print('Pull request is from branch local to repo')
-                    else:
-                        pyc_p.debug_print('Pull request is from branch of forked repo')
-                    pyc_p.debug_print('git pull https://github.com/' + pr.head.repo.owner.login
-                                      + '/' + github_reponame + '.git' + ' ' + pr.head.ref)
-                    pyc_p.debug_print('-' * 30)
-                except Exception as ex:
-                    pyc_p.debug_print('Could not get information about PR source repo:', ex)
-                    continue
+                    pull_requests = [pr]
+                    pyc_p.debug_print('Requested PR: ', pr)
+                # -1 is all pull requests
+                elif args.pull_request<0:
+                    pull_requests = repo.get_pulls('open', base=base_branch.name)
+                # 0 is master, handled later
 
-                branch_id   = str(pr.number)
-                branch_name = pr.head.label.rsplit(':',1)[1]
-                branch_sha  = pr.head.sha
-                # need details, including last commit on PR for setting status
-                pr_list[branch_id] = [machine, branch_name, pr.get_commits().reversed[0]]
+                pr_list = {}
                 #
-                # pull_request > 0 means specific pr (0 is master, -1 is all)
-                if args.pull_request>0 and pr.number!=args.pull_request:
-                    continue
-                if not pr.mergeable:
-                    continue
-                #
-                if not args.scrape_only:
-                    update = force or needs_update(args.project, branch_id, branch_name, branch_sha, base_sha)
-                    if update:
-                        choose_and_launch(args.project, machine, branch_id, branch_name, compiler_type)
+                for pr in pull_requests:
+                    # find out if the PR is from a local branch or from a clone of the repo
+                    try:
+                        pyc_p.debug_print('-' * 30)
+                        pyc_p.debug_print(pr)
+                        pyc_p.debug_print('Repo to merge from   :', pr.head.repo.owner.login)
+                        pyc_p.debug_print('Branch to merge from :', pr.head.ref)
+                        if pr.head.repo.owner.login==github_organisation:
+                            pyc_p.debug_print('Pull request is from branch local to repo')
+                        else:
+                            pyc_p.debug_print('Pull request is from branch of forked repo')
+                        pyc_p.debug_print('git pull https://github.com/' + pr.head.repo.owner.login
+                                          + '/' + github_reponame + '.git' + ' ' + pr.head.ref)
+                        pyc_p.debug_print('-' * 30)
+                    except Exception as ex:
+                        pyc_p.debug_print('Could not get information about PR source repo:', ex)
+                        continue
 
-            # also build the base branch if it has changed, -1 = all (includes master), 0 = master only
-            if not args.scrape_only and args.pull_request<=0:
-                if force or needs_update(args.project, github_base, github_base, base_sha, base_sha):
-                    choose_and_launch(args.project, machine, github_base, github_base, compiler_type)
-                    pr_list[github_base] = [machine, github_base, base_branch.commit, ""]
+                    branch_id   = str(pr.number)
+                    branch_name = pr.head.label.rsplit(':',1)[1]
+                    branch_sha  = pr.head.sha
+                    # need details, including last commit on PR for setting status
+                    pr_list[branch_id] = [machine, branch_name, pr.get_commits().reversed[0]]
+                    #
+                    # pull_request > 0 means specific pr (0 is master, -1 is all)
+                    if args.pull_request>0 and pr.number!=args.pull_request:
+                        continue
+                    if not pr.mergeable:
+                        continue
+                    #
+                    if not args.scrape_only:
+                        update = force or needs_update(args.project, branch_id, branch_name, branch_sha, base_sha)
+                        if update:
+                            choose_and_launch(args.project, machine, branch_id, branch_name, compiler_type)
+
+                # also build the base branch if it has changed, -1 = all (includes master), 0 = master only
+                if not args.scrape_only and args.pull_request<=0:
+                    if force or needs_update(args.project, github_base, github_base, base_sha, base_sha):
+                        choose_and_launch(args.project, machine, github_base, github_base, compiler_type)
+                        pr_list[github_base] = [machine, github_base, base_branch.commit, ""]
 
             scrape_t2    = datetime.datetime.now()
             scrape_tdiff = scrape_t2 - scrape_t1
@@ -635,15 +639,23 @@ if __name__ == "__main__":
                 for branch_id in builds_done:
                     if branch_id in pr_list:
                         # nickname, scrape_file, branch_id, branch_name, head_commit
+                        pyc_p.debug_print('found scrape file which still has active PR')
                         scrape_testing_results(
                             args.project,
                             pr_list[branch_id][0], builds_done.get(branch_id),
                             branch_id, pr_list[branch_id][1], pr_list[branch_id][2])
                     else:
-                        # just delete the file, it is probably an old one
-                        erase_file(
-                            pyc_p.get_setting_for_machine(args.project, machine, 'PYCICLE_MACHINE'),
-                            builds_done.get(branch_id))
+                        # just delete the file and associated dirs, it is probably an old one
+                        pyc_p.debug_print('found scrape file has no active PR')
+                        scrape_file = builds_done.get(branch_id)
+                        remote_ssh = pyc_p.get_setting_for_machine(args.project, machine, 'PYCICLE_MACHINE')
+                        build_dir = re.search(r'(.*)/pycicle-TAG.txt', scrape_file).group(1)
+                        src_dir = build_dir+'/../../src/'+re.escape(args.project)+'-'+branch_id
+                        erase_file(remote_ssh, scrape_file)
+                        print('Trying to remove ' + src_dir)
+                        erase_directory(remote_ssh, src_dir)
+                        print('Trying to remove ' + build_dir)
+                        erase_directory(remote_ssh, build_dir)
 
                 # Delete files more than a day old
                 delete_old_files(machine, 'src',   0)
@@ -655,6 +667,6 @@ if __name__ == "__main__":
             print('Github/Socket exception :', ex)
 
         # Sleep for a while before polling github again
-        time.sleep(poll_time)
+        time.sleep(scrape_time)
         # force option should only have effect on the first iteration
         force = False
