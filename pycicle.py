@@ -342,10 +342,15 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
             print('Extracted date as', DateURL)
 
             URL = ('https://{}/{}/index.php?project='.format(cdash_server, cdash_http_path) + cdash_project_name +
-                   '&date=' + DateURL +
-                   '&filtercount=1' +
-                   '&field1=buildname/string&compare1=63&value1=' +
-                   branch_id + '-' + branch_name)
+                   '&filtercount=2' + # Filter by 2 things: build name and start time
+                   '&showfilters=1' + # Show the filters
+                   '&filtercombine=and' +
+                   '&field1=buildname' +
+                   '&compare1=65' + # Starts with
+                   '&value1=' + branch_id + '-' + branch_name + # PR name
+                   '&field2=buildstarttime' +
+                   '&compare2=83' + # Greater than
+                   '&value2=0') # If we leave this out, CDash shows nothing
             print("URL:", URL)
             if args.debug:
                 print('Debug github PR status', URL)
