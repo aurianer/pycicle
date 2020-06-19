@@ -142,7 +142,7 @@ def get_command_line_args():
 # debug print
 #--------------------------------------------------------------------------
 def debug_print(*text):
-    print('debug: ', end='')
+    print('[' + str(datetime.datetime.now()) + '] debug: ', end='')
     for txt in text:
         print(txt, end=' ')
     print()
