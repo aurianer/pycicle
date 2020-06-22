@@ -49,7 +49,7 @@ string(CONCAT CTEST_BUILD_OPTIONS ${CTEST_BUILD_OPTIONS}
 )
 
 # Add a random delay
-execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (10 * 60) ))"
+execute_process(COMMAND "bash" "-c" "echo -n $(( RANDOM % (2 * 60) ))"
     OUTPUT_VARIABLE BEGIN_DELAY_MINUTES)
 
 set(PYCICLE_JOB_SCRIPT_TEMPLATE "#!/bin/bash

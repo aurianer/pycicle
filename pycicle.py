@@ -373,7 +373,9 @@ def scrape_testing_results(project, nickname, scrape_file, branch_id, branch_nam
                 print('Done setting github PR status for', origin)
 
         build_dir = re.search(r'(.*)/pycicle-TAG.txt', scrape_file).group(1)
+        src_dir = build_dir+'/../../src/'+re.escape(project)+'-'+branch_id
         erase_file(remote_ssh, scrape_file)
+        print('Trying to remove ' + build_dir)
         erase_directory(remote_ssh, build_dir)
         print('-' * 30)
 
